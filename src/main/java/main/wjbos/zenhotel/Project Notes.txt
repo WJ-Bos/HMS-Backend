@@ -21,9 +21,25 @@
 
 ## JWT Utils
      -> The JWTUtils class is responsible for generating JSON Web Tokens (JWT) in a Spring application.
-        JWT is a compact, URL-safe means of representing
-        claims to be transferred between two parties. In this context, JWTs are used for authentication purposes,
-        allowing secure communication between clients and servers.
+        JWT Structure -> Header:
+                         {
+                           "alg": "HS256",
+                           "typ": "JWT"
+                         }
+
+                         Payload:
+                         {
+                           "sub": "1234567890",
+                           "name": "John Doe",
+                           "iat": 1516239022
+                         }
+
+                         Signature:
+                         HMACSHA256(
+                           base64UrlEncode(header) + "." +
+                           base64UrlEncode(payload),
+                           secret
+                         )
 
         # Key Components
         # Expiration Time
@@ -41,7 +57,9 @@
         # Constructor
 
         public JWTUtils() { ... }
-        The constructor initializes the Key field. It decodes a hardcoded base64 secret key string into bytes and uses the SecretKeySpec class to create an HMAC-SHA256 key.
+        Defines a Secret String "Alphanumerical" that is used to sign the JWT Token
+        Decode the string using base64 decoder and save in Byte Array
+        Set the Key Instance equal to new SecretKeySpec using the "HmacSHA256" Algorithm
 
         # Generating a JWT
 
@@ -53,6 +71,7 @@
         Expiration: The current timestamp plus the defined expiration time (7 days).
         The token is then signed using the HMAC-SHA256 algorithm and the secret key.
         Finally, the token is returned as a compact, serialized string.
+
         Security Considerations
 
         Hashing Algorithm Used -> HmacSha256 ->
