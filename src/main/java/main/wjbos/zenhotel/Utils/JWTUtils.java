@@ -1,12 +1,15 @@
 package main.wjbos.zenhotel.Utils;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwt;
 import io.jsonwebtoken.Jwts;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import javax.security.sasl.SaslServer;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Date;
@@ -24,8 +27,8 @@ public class JWTUtils {
      * The secret key is used to sign the JWT tokens with the HMAC-SHA256 algorithm.
      */
     public JWTUtils() {
-        String secretKey = "345678643459834579384634572985739865";
-        byte[] keyBytes = Base64.getDecoder().decode(secretKey.getBytes(StandardCharsets.UTF_8));
+        String secretString = Dotenv.load().get("SECRET_STRING");
+        byte[] keyBytes = Base64.getDecoder().decode(secretString.getBytes(StandardCharsets.UTF_8));
         this.Key = new SecretKeySpec(keyBytes,"HmacSHA256");
     }
 
@@ -42,11 +45,12 @@ public class JWTUtils {
      * @return A JWT token as a compact, serialized string.
      */
     public String generateToken(UserDetails userDetails) {
-        return Jwts.builder().subject(userDetails.getUsername())
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .signWith(Key)
-                .compact();
+       return Jwts.builder()
+               .subject(userDetails.getUsername())
+               .issuedAt(new Date(System.currentTimeMillis()))
+               .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+               .signWith(Key)
+               .compact();
     }
 
     /**
@@ -57,7 +61,7 @@ public class JWTUtils {
      * @return The username contained in the JWT token.
      */
     public String extractUsername(String token) {
-        return extractClaims(token, Claims::getSubject);
+        return extractClaims(token, Claims::getSubject); //Subject is set to username
     }
 
 
@@ -70,10 +74,9 @@ public class JWTUtils {
      * @param <T> The type of the extracted claim.
      * @return The extracted claim.
      */
-    private <T> T extractClaims(String token, Function<Claims, T> claimsResolver) {
-        return claimsResolver.apply(Jwts.parser().verifyWith(Key).build().parseSignedClaims(token).getPayload());
+    private <T> T extractClaims(String token, Function<Claims, T>claimsResolver){
+        return  claimsResolver.apply(Jwts.parser().verifyWith(Key).build().parseSignedClaims(token).getPayload());
     }
-
 
     /**
      * Checks if the given JWT token is valid.
